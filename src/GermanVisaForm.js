@@ -1,6 +1,8 @@
 import { FormControl, TextField, Typography, Autocomplete, Button } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import { Box } from '@mui/system';
+import { useEffect, useState } from 'react';
+import { PDFDocument } from 'pdf-lib';
 
 const useStyle = makeStyles({
   appContainer: {
@@ -92,10 +94,22 @@ const financialCondition = [
 export default function InitialForm() {
   const classes = useStyle();
 
+  const [pdfFieldsName, setPdfFieldsName] = useState(null);
+  const [pdfForm, setPdfForm] = useState(null);
+  useEffect(() => {
+    fetch('/VAF.pdf', {})
+      .then(res => res.arrayBuffer())
+      .then(existingPdfBytes => PDFDocument.load(existingPdfBytes))
+      .then(document => setPdfForm(document.getForm()))
+      .then( () => setPdfFieldsName(pdfForm.getName()));
+    
+    console.log(pdfForm);
+  }, []);
+
   return <FormControl className={classes.form}>
     <Typography className={classes.title} variant="h2">Choose where to go</Typography>
     <br />
-    <Box
+    {/* <Box
       sx={{
         '& .MuiTextField-root': { m: 1, width: '87ch' },
       }}
@@ -172,8 +186,16 @@ export default function InitialForm() {
           options={financialCondition}
           renderInput={(params) => <TextField {...params} label="Finantial condition" />}
         />
-      </div>
+      </div> 
 
-    </Box>
+    </Box> */}
+
+    { 
+      pdfFieldsName? pdfFieldsName.map(name => {
+        console.log(pdfForm.getTextField(name).getText())
+        (<TextField id="outlined-basic" label={pdfForm.getTextField(name).getText()} variant="outlined" />)
+      }) : (<div>Wait...</div>)
+    }
+
   </FormControl>
 }
