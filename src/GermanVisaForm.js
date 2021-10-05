@@ -94,17 +94,28 @@ const financialCondition = [
 export default function InitialForm() {
   const classes = useStyle();
 
-  const [pdfFieldsName, setPdfFieldsName] = useState(null);
-  const [pdfForm, setPdfForm] = useState(null);
+  const [pdfFieldsName, setPdfFieldsName] = useState([]);
+  let pdfForm;
+
+  //const [pdfFieldsName, setPdfFieldsName] = useState(null);
+  //const [pdfForm, setPdfForm] = useState(null);
+
   useEffect(() => {
     fetch('/VAF.pdf', {})
       .then(res => res.arrayBuffer())
       .then(existingPdfBytes => PDFDocument.load(existingPdfBytes))
-      .then(document => setPdfForm(document.getForm()))
-      .then( () => setPdfFieldsName(pdfForm.getName()));
-    
-    console.log(pdfForm);
+      .then(document => pdfForm = document.getForm())
+      .then( () => {
+        const fields = pdfForm.getFields();
+        let copyArr = [...pdfFieldsName];
+        fields.forEach(field => {
+          copyArr.push(field.getName());
+          setPdfFieldsName(copyArr);
+          //console.log(pdfFieldsName);
+        })
+      })
   }, []);
+  console.log(pdfFieldsName);
 
   return <FormControl className={classes.form}>
     <Typography className={classes.title} variant="h2">Choose where to go</Typography>
@@ -190,11 +201,13 @@ export default function InitialForm() {
 
     </Box> */}
 
-    { 
-      pdfFieldsName? pdfFieldsName.map(name => {
-        console.log(pdfForm.getTextField(name).getText())
-        (<TextField id="outlined-basic" label={pdfForm.getTextField(name).getText()} variant="outlined" />)
-      }) : (<div>Wait...</div>)
+    {
+      pdfFieldsName? pdfFieldsName.map(field => {
+        return (<TextField id="outlined-basic" label={field} variant="outlined" />)
+      }) : ( <div>Waiting ...</div> )
+        
+      
+      //(<TextField id="outlined-basic" label={pdfForm.getTextField(name).getText()} variant="outlined" />)
     }
 
   </FormControl>
