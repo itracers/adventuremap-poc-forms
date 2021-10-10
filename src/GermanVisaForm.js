@@ -1,8 +1,10 @@
-import { FormControl, TextField, Typography, Autocomplete, Button } from '@mui/material';
+import { FormControl, TextField, Typography, Autocomplete, Button, Checkbox, MenuItem } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import { Box } from '@mui/system';
+import  Select  from '@mui/material/Select';
+import FormControlLabel from '@mui/material/FormControlLabel';
 import { useEffect, useState } from 'react';
-import { PDFDocument } from 'pdf-lib';
+import { PDFCheckBox, PDFDocument, PDFTextField } from 'pdf-lib';
 
 const useStyle = makeStyles({
   appContainer: {
@@ -94,7 +96,7 @@ const financialCondition = [
 export default function InitialForm() {
   const classes = useStyle();
 
-  const [pdfFieldsName, setPdfFieldsName] = useState([]);
+  const [pdfFields, setPdfFields] = useState([]);
   let pdfForm;
 
   //const [pdfFieldsName, setPdfFieldsName] = useState(null);
@@ -107,105 +109,28 @@ export default function InitialForm() {
       .then(document => pdfForm = document.getForm())
       .then( () => {
         const fields = pdfForm.getFields();
-        let copyArr = [...pdfFieldsName];
-        fields.forEach(field => {
-          copyArr.push(field.getName());
-          setPdfFieldsName(copyArr);
-          //console.log(pdfFieldsName);
-        })
+        console.log(fields);
+        setPdfFields(fields.map(field => ({
+          type: field instanceof PDFTextField ? 'text' : field instanceof PDFCheckBox ? 'checkbox' : 'radio', 
+          name : field.getName(),
+          values: field?.acroField?.dict ? [...field.acroField.dict.dict.values()].map(item => item.value) : null
+        })))
       })
   }, []);
-  console.log(pdfFieldsName);
+  console.log(pdfFields);
 
   return <FormControl className={classes.form}>
     <Typography className={classes.title} variant="h2">Choose where to go</Typography>
     <br />
-    {/* <Box
-      sx={{
-        '& .MuiTextField-root': { m: 1, width: '87ch' },
-      }}
-
-    >
-      <div>
-        <Autocomplete
-          disablePortal
-          options={citizenshipCountries}
-          renderInput={(params) => <TextField {...params} label="Citizenship country" />}
-        />
-      </div>
-      <div>
-        <Autocomplete
-          disablePortal
-          options={travelDocuments}
-          renderInput={(params) => <TextField {...params} label="Travel document" />}
-        />
-      </div>
-    </Box>
-    <Box
-      sx={{
-        '& .MuiTextField-root': { m: 1, width: '87ch' },
-      }}
-    >
-      <div className={classes.uploadPhotoContainer}>
-        <Typography variant="label" className={classes.title}>2 colorful photos</Typography>
-        <br />
-        <input
-          accept="image/*"
-          style={{ display: 'none' }}
-          id="raised-button-file"
-          multiple
-          type="file"
-        />
-        <label htmlFor="raised-button-file">
-          <Button variant="raised" component="span" className={classes.uploadPhotoButton}>
-            Upload photo 1
-          </Button>
-          <Button variant="raised" component="span" className={classes.uploadPhotoButton}>
-            Upload photo 2
-          </Button>
-        </label>
-      </div>
-      <div>
-        <Autocomplete
-          fullWidth
-          disablePortal
-          options={insuranceServices}
-          renderInput={(params) => <TextField {...params} label="Choose insurance service" />}
-        />
-      </div>
-      <div>
-        <Autocomplete
-          fullWidth
-          disablePortal
-          options={proofsOfPurpose}
-          groupBy={(option) => option.type}
-          renderInput={(params) => <TextField {...params} label="Proof of purpose" />}
-        />
-      </div>
-      <div>
-        <Autocomplete
-          fullWidth
-          disablePortal
-          options={invitationTypes}
-          renderInput={(params) => <TextField {...params} label="Invitation type" />}
-        />
-      </div>
-      <div>
-        <Autocomplete
-          fullWidth
-          disablePortal
-          options={financialCondition}
-          renderInput={(params) => <TextField {...params} label="Finantial condition" />}
-        />
-      </div> 
-
-    </Box> */}
 
     {
-      pdfFieldsName? pdfFieldsName.map(field => {
-        return (<TextField id="outlined-basic" label={field} variant="outlined" />)
-      }) : ( <div>Waiting ...</div> )
-        
+      pdfFields ? pdfFields.map( (field, i) => {
+        return field.type === 'checkbox' ? (<FormControlLabel control={<Checkbox id='outlined-basic' key={`field-${i}`} variant="outlined" />} label={field.name || 'No label'} />) : 
+        field.type === 'radio' ? (<Select label={field.name || 'No label'}>
+          {field.values && field.values.map(value => <MenuItem value={value}> {value} </MenuItem>)}
+        </Select>) : 
+        (<TextField id="outlined-basic" label={field.name} key={`field-${i}`} variant="outlined" />)
+      }) : (<div> Waiting... </div>)
       
       //(<TextField id="outlined-basic" label={pdfForm.getTextField(name).getText()} variant="outlined" />)
     }
