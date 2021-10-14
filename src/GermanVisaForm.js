@@ -97,10 +97,25 @@ export default function InitialForm() {
   const classes = useStyle();
 
   const [pdfFields, setPdfFields] = useState([]);
-  let pdfForm;
 
-  //const [pdfFieldsName, setPdfFieldsName] = useState(null);
-  //const [pdfForm, setPdfForm] = useState(null);
+  let fieldsValue; // Значения инпутов
+  let pdfForm;  
+
+  function handleInputChanges(event) {
+    const target = event.target;
+    fieldsValue = {
+      ...fieldsValue,
+      [target.name]: target.type === 'checkbox' ? target.checked : target.value
+    };
+    console.log(fieldsValue)
+  }
+
+  function getPDF() {
+    fieldsValue.map(field => {
+      console.log(field);
+    });
+  }
+
 
   useEffect(() => {
     fetch('/VAF.pdf', {})
@@ -109,7 +124,6 @@ export default function InitialForm() {
       .then(document => pdfForm = document.getForm())
       .then( () => {
         const fields = pdfForm.getFields();
-        console.log(fields);
         setPdfFields(fields.map(field => ({
           type: field instanceof PDFTextField ? 'text' : field instanceof PDFCheckBox ? 'checkbox' : 'radio', 
           name : field.getName(),
@@ -117,22 +131,24 @@ export default function InitialForm() {
         })))
       })
   }, []);
-  console.log(pdfFields);
+  setTimeout( () => {
+    console.log(pdfFields);
+  },1000)
+
+  
 
   return <FormControl className={classes.form}>
     <Typography className={classes.title} variant="h2">Choose where to go</Typography>
     <br />
-
+    <input type="button" onInput={getPDF}></input>
     {
       pdfFields ? pdfFields.map( (field, i) => {
-        return field.type === 'checkbox' ? (<FormControlLabel control={<Checkbox id='outlined-basic' key={`field-${i}`} variant="outlined" />} label={field.name || 'No label'} />) : 
-        field.type === 'radio' ? (<Select label={field.name || 'No label'}>
+        return field.type === 'checkbox' ? (<FormControlLabel control={<Checkbox id='outlined-basic' name={field.name} onChange={handleInputChanges}  key={`field-${i}`} variant="outlined" />} label={field.name || 'No label'} />) : 
+        field.type === 'radio' ? (<Select name={field.name} onChange={handleInputChanges} label={field.name || 'No label'} >
           {field.values && field.values.map(value => <MenuItem value={value}> {value} </MenuItem>)}
         </Select>) : 
-        (<TextField id="outlined-basic" label={field.name} key={`field-${i}`} variant="outlined" />)
+        (<TextField id="outlined-basic" name={field.name} onChange={handleInputChanges} label={field.name} key={`field-${i}`} variant="outlined" />)
       }) : (<div> Waiting... </div>)
-      
-      //(<TextField id="outlined-basic" label={pdfForm.getTextField(name).getText()} variant="outlined" />)
     }
 
   </FormControl>

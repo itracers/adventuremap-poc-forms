@@ -52,17 +52,6 @@ export default function FormsStepper({ steps = [] }) {
     setActiveStep(0);
   };
 
-  /*
-  async function getPdfForms() {
-    const existingPdfBytes = await fetch('https://visa.vfsglobal.com/one-pager/poland/belarus/polish/pdf/VAF-National-visa-sample-160616.pdf').then(res => res.arrayBuffer());
-    const pdfDocument = await PDFDocument.load(existingPdfBytes);
-    const form = pdfDocument.getForm();
-    form.getField('Text Field0').setText('Olololo');
-    const pdfBytes = await pdfDocument.save();
-    download(pdfBytes, "vs.pdf", "application/pdf");
-  } 
-  */
-
   return (
     <Box sx={{ width: '100%' }}>
       <Stepper activeStep={activeStep}>
